@@ -17,7 +17,6 @@ const io = socketio(server, {
 		methods: ["GET", "POST"],
 	},
 });
-
 io.use((socket, next) => {
 	const token = socket.handshake.auth.token;
 	const jwt = require("jsonwebtoken");
@@ -60,5 +59,21 @@ io.use((socket, next) => {
 const mapEvents = require("./srcs/events");
 mapEvents(io);
 
+// Redis adapter
+const { createClient } = require("redis");
+const { createAdapter } = require("@socket.io/redis-adapter");
+const pubClient = createClient({ host: "localhost", port: 6379 });
+const subClient = pubClient.duplicate();
+
+pubClient.on("error", (err) => {
+	console.log(err.message);
+});
+subClient.on("error", (err) => {
+	console.log(err.message);
+});
+
 const PORT = 3000 || process.env.PORT;
-server.listen(PORT, () => console.log(`Sever run on ${PORT}`));
+Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
+	io.adapter(createAdapter(pubClient, subClient));
+	server.listen(PORT, () => console.log(`Sever run on ${PORT}`));
+});
