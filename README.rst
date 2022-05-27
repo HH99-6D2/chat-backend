@@ -153,5 +153,11 @@ MESSAGES
 
    - errorMessage("E05", "Invalid Room number")
    - errorMessage("E06", "Room Expired or not opened")
-   - errorMessage("E07", "Already Joined, NO accept multiple socket per user")
+   - errorMessage("E07", "Already Joined, NOT accept join per user")
+
+      - 소켓을 새로 만들어서 연결해도 유저가 같은 id를 가졌다면 참여를 거부합니다.
+      - 해당 방에 재참여하는 경우도, disconnect하지 않고 이미 연결되어있다면, 참여를 거부합니다.
+
    - errorMessage("E08", "Invalid message Type")
+   - errorMessage("E09", "Internal Server Error, Not able to join room")
+

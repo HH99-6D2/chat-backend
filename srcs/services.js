@@ -6,7 +6,6 @@ async function userJoin(socketId, id, nickname, room) {
 	const user = { socketId, id, nickname, room };
 	rooms[`${room}`] = rooms[`${room}`] ? rooms[`${room}`] + 1 : 1;
 	users.push(user);
-	console.log(users);
 	return user;
 }
 
@@ -29,6 +28,12 @@ async function userLeave(id) {
 async function getRoomUsers(room) {
 	return users.filter((user) => user.room === room);
 }
+
+/* // DEPRECATE on v0.2
+async function isJoined(sid, uid) {
+	return users.find((user) => user.id === sid || user);
+}
+*/
 
 module.exports = {
 	userJoin,

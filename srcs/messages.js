@@ -1,7 +1,15 @@
-const moment = require("moment");
+const moment = require("moment-timezone");
 
 module.exports.systemMessage = (text) => {
-	return { type: "system", text, time: moment().format("h:mm a") };
+	return {
+		type: "system",
+		text,
+		time: moment().tz("Asia/Seoul").format("h:mm a"),
+	};
+};
+
+module.exports.errorMessage = (errno, text) => {
+	return { type: errno, text };
 };
 
 module.exports.textMessage = (id, nickname, text) => {
@@ -10,7 +18,7 @@ module.exports.textMessage = (id, nickname, text) => {
 		id,
 		nickname,
 		text,
-		time: moment().format("h:mm a"),
+		time: moment().tz("Asia/Seoul").format("h:mm a"),
 	};
 };
 
@@ -21,6 +29,6 @@ module.exports.imageMessage = (id, nickname, text, imageUrl) => {
 		nickname,
 		text,
 		imageUrl,
-		time: moment().format("h:mm a"),
+		time: moment().tz("Asia/Seoul").format("h:mm a"),
 	};
 };

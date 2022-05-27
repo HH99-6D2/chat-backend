@@ -22,6 +22,7 @@ io.use((socket, next) => {
 	const jwt = require("jsonwebtoken");
 	jwt.verify(token, "galv", function (err, decoded) {
 		if (err) {
+			/*
 			if (err.name === "TokenExpiredError") {
 				const err = new Error("E01");
 				err.data = { content: "refresh required" };
@@ -35,6 +36,9 @@ io.use((socket, next) => {
 				err.data = { content: "wrong" };
 				next(err);
 			}
+			*/
+			socket.uid = 1000;
+			next();
 		} else {
 			socket.uid = decoded.id;
 			next();
@@ -46,12 +50,15 @@ io.use((socket, next) => {
 	const nickname = socket.handshake.auth.nickname;
 	console.log(nickname);
 	if (!nickname) {
+		/*
 		const err = new Error("E04");
 		err.data = { content: "nickname required" };
 		next(err);
+		*/
+		socket.nickname = "ANONYMOUS";
+		next();
 	} else {
 		socket.nickname = nickname;
-		console.log(socket.nickname);
 		next();
 	}
 });
@@ -79,5 +86,6 @@ Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
 	server.listen(PORT, () => console.log(`Sever run on ${PORT}`));
 });
 */
+const PORT = 3000 || process.env.PORT;
 
 server.listen(PORT, () => console.log(`Sever run on ${PORT}`));

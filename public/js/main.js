@@ -12,15 +12,23 @@ if (room !== undefined) {
 	const token = localStorage.getItem("token");
 	const nickname = localStorage.getItem("nickname");
 
-	const socket = io("https://test.junehan-test.shop", {
-		auth: {
-			token,
-			nickname,
-		},
+	const socket = io(
+		//"https://test.junehan-test.shop",
+		{
+			auth: {
+				token,
+				nickname,
+			},
+		}
+	);
+
+	socket.on("chat_error", (err) => {
+		// ERROR while chat or join
+		window.alert(err.type, err.text);
 	});
 
 	socket.on("connect_error", (err) => {
-		// AUTH ERROR?
+		//ERROR while Connection
 		console.log(err.message); // not Authorized
 		console.log(err.data); // retry with login
 	});
@@ -43,8 +51,13 @@ if (room !== undefined) {
 			outputMessage(message);
 			// Scroll down
 			chatMessages.scrollTop = chatMessages.scrollHeight;
+		} else if (message.type === "image") {
+			console.log(message);
+			outputMessage(message);
+			// Scroll down
+			chatMessages.scrollTop = chatMessages.scrollHeight;
 		} else {
-			console.log("Image message");
+			console.log("error", message);
 		}
 	});
 
@@ -52,6 +65,7 @@ if (room !== undefined) {
 	chatForm.addEventListener("submit", (e) => {
 		e.preventDefault();
 
+		let type = e.target.elements.type.value;
 		let text = e.target.elements.msg.value;
 
 		text = text.trim();
@@ -59,7 +73,7 @@ if (room !== undefined) {
 		if (!text) {
 			return false;
 		}
-		socket.emit("chatMessage", JSON.stringify({ type: "text", text }));
+		socket.emit("chatMessage", JSON.stringify({ type, text }));
 
 		// Clear input
 		e.target.elements.msg.value = "";
