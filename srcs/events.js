@@ -4,20 +4,17 @@ const {
 	getCurrentUser,
 	userLeave,
 	getRoomUsers,
-	statRoomUsers,
-} = require("./users");
+} = require("./services");
 
 module.exports = (io) => {
 	io.on("connection", async (socket) => {
-		socket.join("0");
 		socket.on("joinRoom", async ({ id, username, room }) => {
-			const user = await userJoin(socket.id, id, username, room);
-			await userLeave(socket.id);
-			socket.join(user.room);
-
-			if (room !== "0") {
+			if (isNaN(room)) {
+				socket.emit("error", systemMessage("invalid Room"));
+			} else {
+				const user = await userJoin(socket.id, id, username, room);
+				socket.join(user.room);
 				socket.emit("message", systemMessage("welcome to chat"));
-				console.log(user.room);
 				io.to(user.room).emit("roomUsers", {
 					room: user.room,
 					users: await getRoomUsers(user.room),
@@ -27,10 +24,10 @@ module.exports = (io) => {
 					"message",
 					systemMessage(`user ${user.id} joined`)
 				);
+
 				socket.on("chatMessage", async (message) => {
 					const user = await getCurrentUser(socket.id);
 					message = JSON.parse(message);
-					console.log(message);
 					let data =
 						message.type === "text"
 							? textMessage(user.id, message.text, user.username)
@@ -45,32 +42,31 @@ module.exports = (io) => {
 							  )
 							: data;
 
-					if (data) {
-						socket.emit(
+					data
+						? io.to(user.room).emit("message", data)
+						: socket.emit("error", systemMessage("InvalidMessage"));
+				});
+
+				socket.on("disconnect", async () => {
+					const user = await userLeave(socket.id);
+					if (user) {
+						const room = user.room;
+						io.to(room).emit(
 							"message",
-							systemMessage("welcome to lobby")
+							systemMessage(`user ${user.id} left the chat`)
 						);
-						io.to(user.room).emit("message", data);
+						io.to(room).emit("roomUsers", {
+							room: user.room,
+							users: await getRoomUsers(user.room),
+						});
+					} else {
+						socket.emit(
+							"error",
+							systemMessage("Not found in connected")
+						);
 					}
 				});
-			} else {
-				socket.emit("message", systemMessage("welcome to lobby"));
 			}
-
-			socket.on("disconnect", async () => {
-				const user = await userLeave(socket.id);
-				const room = user ? user.room : "0";
-				if (user && room !== "0") {
-					io.to(user.room).emit(
-						"message",
-						systemMessage(`user ${user.id} left the chat`)
-					);
-					io.to(user.room).emit("roomUsers", {
-						room: user.room,
-						users: await getRoomUsers(user.room),
-					});
-				}
-			});
 		});
 	});
 

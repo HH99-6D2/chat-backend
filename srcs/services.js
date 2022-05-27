@@ -1,6 +1,7 @@
 const users = [];
 const rooms = {};
 // JOIN USER TO Chat;
+//
 async function userJoin(socketId, id, username, room) {
 	const user = { socketId, id, username, room };
 	if (room !== 0) {
@@ -30,14 +31,9 @@ async function getRoomUsers(room) {
 	return users.filter((user) => user.room === room);
 }
 
-async function statRoomUsers(room) {
-	return rooms;
-}
-
 module.exports = {
 	userJoin,
 	getCurrentUser,
 	userLeave,
 	getRoomUsers,
-	statRoomUsers,
 };

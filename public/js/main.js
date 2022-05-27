@@ -11,7 +11,17 @@ const { room, username } = Qs.parse(location.search, {
 const id = 1;
 if (room !== undefined) {
 	//	const socket = io("https://test.junehan-test.shop");
-	const socket = io();
+	const socket = io({
+		auth: {
+			token: localStorage.getItem("token"),
+		},
+	});
+
+	socket.on("connect_error", (err) => {
+		// AUTH ERROR?
+		console.log(err.message); // not Authorized
+		console.log(err.data); // retry with login
+	});
 
 	// Join chatroom
 	socket.emit("joinRoom", { id, username, room });
@@ -20,6 +30,9 @@ if (room !== undefined) {
 	socket.on("roomUsers", ({ room, users }) => {
 		outputRoomName(room);
 		outputUsers(users);
+	});
+	socket.on("stat", ({ rooms }) => {
+		console.log(rooms);
 	});
 
 	// Message from server
