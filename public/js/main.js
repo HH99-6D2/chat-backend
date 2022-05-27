@@ -31,9 +31,6 @@ if (room !== undefined) {
 		outputRoomName(room);
 		outputUsers(users);
 	});
-	socket.on("stat", ({ rooms }) => {
-		console.log(rooms);
-	});
 
 	// Message from server
 	socket.on("message", (message) => {
