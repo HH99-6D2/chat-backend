@@ -12,8 +12,7 @@ if (room !== undefined) {
 	const token = localStorage.getItem("token");
 	const nickname = localStorage.getItem("nickname");
 
-	//	const socket = io("https://test.junehan-test.shop");
-	const socket = io({
+	const socket = io("https://test.junehan-test.shop", {
 		auth: {
 			token,
 			nickname,

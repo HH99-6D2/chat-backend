@@ -60,6 +60,7 @@ const mapEvents = require("./srcs/events");
 mapEvents(io);
 
 // Redis adapter
+/*
 const { createClient } = require("redis");
 const { createAdapter } = require("@socket.io/redis-adapter");
 const pubClient = createClient({ host: "localhost", port: 6379 });
@@ -77,3 +78,6 @@ Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
 	io.adapter(createAdapter(pubClient, subClient));
 	server.listen(PORT, () => console.log(`Sever run on ${PORT}`));
 });
+*/
+
+server.listen(PORT, () => console.log(`Sever run on ${PORT}`));
