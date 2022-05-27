@@ -1,6 +1,27 @@
 WS Backend app
 --------------
 
+추가 기능 TODO
+--------------
+
+   - socket Backend redis로 변경
+   - service의 기능들 redis기능으로 변경
+
+      - Event: "history" - 해당 room의 로그를 가져옴
+
+   - room에 대한 유효성 검사
+   - Event: "alert" 이벤트 정의
+
+      - 방에 중복 로그인 할수없다. *(이미 같은 유저가 해당 방에 들어와 있다.)*
+      - 해당 방이 유효하지 않다. *(해당 방은 만료되었다.)*
+      - 백엔드가 불가피하게 종료하였다? *(동작중 레디스 백엔드가 Stop 했을 때 서버에서 소켓을 핸들링 가능하다면, 해당 서버를 통한 소켓만 핸들링 가능할 가능성이 높음)*
+      - 채팅방 번호가 유효한 숫자가 아닐 경우 *(connection 이후 join(room)을 하기 때문에 해당소켓에 alert)*
+
+   - redis 조작 연습
+
+HOWTO
+^^^^^
+
 - Conection
 
    .. code-block:: javascript
@@ -13,6 +34,11 @@ WS Backend app
       });
 
       socket.emit("joinRoom", { room: "1" }); // room id -> 유효성검사 + 연결
+
+   - Test환경에서 nickname이나 토큰이 유효하지 않을 경우, 아래와 같이 고정됩니다.
+
+      - nickname: ``ANONYMOUS``
+      - id: ``1000``
 
 Events
 ^^^^^^
