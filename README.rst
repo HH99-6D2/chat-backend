@@ -5,12 +5,14 @@ WS Backend app
 
    .. code-block:: javascript
 
-      const socket = io({
+      const socket = io("https://test.junehan-test.shop", {
           auth: {
               token: localStorage.getItem("token"),
               nickname: localStorage.getItem("token"),
           },
       });
+
+      socket.emit("joinRoom", { room: "1" }); // room id -> 유효성검사 + 연결
 
 Events
 ^^^^^^
