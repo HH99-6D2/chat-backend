@@ -68,6 +68,8 @@ Events
                console.log(err.text); // Room invalid || Chat type Error
          })
 
+      - *메세지가 유효하지 않으면 전달을 막거나, 방에 중복접근시 join을 막는 등의 행동*
+
    - ``roomUsers``\: 방의 유저들의 접속상태를 변경시에 알립니다.
 
       .. code-block:: javascript
