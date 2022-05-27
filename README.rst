@@ -1,26 +1,29 @@
 WS Backend app
 --------------
 
-추가 기능 TODO
---------------
+추가 기능 TODO v0.1 -> v0.2
+---------------------------
 
-   - socket Backend redis로 변경
-   - service의 기능들 redis기능으로 변경
+   - socket Backend redis로 변경 (x)
+   - service의 기능들 redis기능으로 변경 (x)
 
       - Event: "history" - 해당 room의 로그를 가져옴
 
-   - room에 대한 유효성 검사
-   - Event: "alert" 이벤트 정의
+   - room에 대한 유효성 검사 (x)
+   - Event: "chat_error" 이벤트 정의 (DONE)
 
       - 방에 중복 로그인 할수없다. *(이미 같은 유저가 해당 방에 들어와 있다.)*
       - 해당 방이 유효하지 않다. *(해당 방은 만료되었다.)*
       - 백엔드가 불가피하게 종료하였다? *(동작중 레디스 백엔드가 Stop 했을 때 서버에서 소켓을 핸들링 가능하다면, 해당 서버를 통한 소켓만 핸들링 가능할 가능성이 높음)*
-      - 채팅방 번호가 유효한 숫자가 아닐 경우 *(connection 이후 join(room)을 하기 때문에 해당소켓에 alert)*
+      - 채팅방 번호가 유효한 숫자가 아닐 경우 *(connection 이후 join(room)을 하기 때문에 해당소켓에 alert레벨의 별도 이벤트가 필요합니다.)*
 
    - redis 조작 연습
+   - Event: "leave" 이벤트 정의 (x)
 
-HOWTO (v0.1)
-^^^^^^^^^^^^
+     - 다른방에 Join할 경우에 기존의 방에서 나가지는 스펙을 추가하였습니다. 하지만 클라이언트가 소켓을 유지할 경우 채팅 알림은 계속됩니다. 따라서 detach라는 개념의 메뉴얼한 새로운 이벤트를 정의할 필요가 있습니다.(로비에 나갔을 때 더이상 알림을 받지 않도록 소켓은 유지하되 방에서는 나가는.)
+
+HOWTO (v0.1 -> v0.2)
+^^^^^^^^^^^^^^^^^^^^
 
 - Conection
 
@@ -40,6 +43,9 @@ HOWTO (v0.1)
       - nickname: ``ANONYMOUS``
       - id: ``1000``
 
+   - 기본적으로 client에서 Location이 변경되면(새로고침) disconnect이벤트가 발생하여 방에서 나가집니다.
+
+   - 다른방에 Join할 경우에 기존의 방에서 나가지는 스펙을 추가하였습니다. 따라서 detach라는 메뉴얼한 새로운 이벤트를 정의할 필요가 있습니다.(로비에 나갔을때 더이상 알림을 받지 않도록 소켓은 유지하되 방에서는 나가는.)
 Events
 ^^^^^^
 
@@ -59,7 +65,7 @@ Events
       - message: E03 (wrong)  / content: wrong (login again)
       - message: E04 (nickname required)  / content: nickname required
 
-   -  **(v0.2 포함되지 않은 사양)** ``chat_error``\: Chat중의 Room에 대한 에러 혹은 메세지에 대한 에러 등이 포함됩니다.
+   -  **v0.2** ``chat_error``\: Chat중의 Room에 대한 에러 혹은 메세지에 대한 에러 등이 포함됩니다.
 
       .. code-block:: javascript
 
@@ -142,7 +148,7 @@ MESSAGES
       }
 
 
-:ErrorMessage: **(v0.2 포함되지 않은 사양)** 연결시(connect)에 발생하는 문제가 아니라 진행중에 발생하는 문제이기 때문에, 비정상적인 입력을 전제합니다.
+:ErrorMessage: **v0.2** 연결시(connect)에 발생하는 문제가 아니라 진행중에 발생하는 문제이기 때문에, 비정상적인 입력을 전제합니다.
 
    .. code-block:: json
 
@@ -153,11 +159,19 @@ MESSAGES
 
    - errorMessage("E05", "Invalid Room number")
    - errorMessage("E06", "Room Expired or not opened")
-   - errorMessage("E07", "Already Joined, NOT accept join per user")
-
-      - 소켓을 새로 만들어서 연결해도 유저가 같은 id를 가졌다면 참여를 거부합니다.
-      - 해당 방에 재참여하는 경우도, disconnect하지 않고 이미 연결되어있다면, 참여를 거부합니다.
-
    - errorMessage("E08", "Invalid message Type")
    - errorMessage("E09", "Internal Server Error, Not able to join room")
+
+   .. note::
+
+      E07의 에러: v0.1 -> v0.2
+
+      기본적으로 발생하지 않을 계획입니다.
+      방에 들어가는 것은 기본적으로 기존에 참여했던 방에서 나가는 것을 포함합니다.
+
+      - errorMessage("E07", "Already Joined, NOT accept join per user")
+
+         - 소켓을 새로 만들어서 연결해도 유저가 같은 id를 가졌다면 참여를 거부합니다.
+         - 해당 방에 재참여하는 경우도, disconnect하지 않고 이미 연결되어있다면, 참여를 거부합니다.
+
 
