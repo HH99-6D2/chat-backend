@@ -34,14 +34,15 @@ module.exports = (io) => {
 				socket.on("chatMessage", async (message) => {
 					const user = await getCurrentUser(socket.id);
 					message = JSON.parse(message);
+					console.log(user);
 					let data =
 						message.type === "text"
-							? textMessage(user.uid, user.nickname, message.text)
+							? textMessage(user.id, user.nickname, message.text)
 							: {};
 					data =
 						message.type === "image"
 							? imageMessage(
-									user.uid,
+									user.id,
 									user.nickname,
 									message.text,
 									message.imageUrl
