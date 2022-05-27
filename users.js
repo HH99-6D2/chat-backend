@@ -1,18 +1,20 @@
 const users = [];
 const rooms = {};
 // JOIN USER TO Chat;
-function userJoin(socketId, id, username, room) {
+async function userJoin(socketId, id, username, room) {
 	const user = { socketId, id, username, room };
-	rooms[`${room}`] = rooms[`${room}`] ? rooms[`${room}`] + 1 : 1;
-	users.push(user);
+	if (room !== 0) {
+		rooms[`${room}`] = rooms[`${room}`] ? rooms[`${room}`] + 1 : 1;
+		users.push(user);
+	}
 	return user;
 }
 
-function getCurrentUser(id) {
+async function getCurrentUser(id) {
 	return users.find((user) => user.socketId === id);
 }
 
-function userLeave(id) {
+async function userLeave(id) {
 	const index = users.findIndex((user) => user.socketId === id);
 	let user = null;
 	if (index !== -1) {
@@ -24,8 +26,12 @@ function userLeave(id) {
 	return user;
 }
 
-function getRoomUsers(room) {
+async function getRoomUsers(room) {
 	return users.filter((user) => user.room === room);
+}
+
+async function statRoomUsers(room) {
+	return rooms;
 }
 
 module.exports = {
@@ -33,4 +39,5 @@ module.exports = {
 	getCurrentUser,
 	userLeave,
 	getRoomUsers,
+	statRoomUsers,
 };
