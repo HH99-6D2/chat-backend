@@ -8,11 +8,17 @@ const {
 
 module.exports = (io) => {
 	io.on("connection", async (socket) => {
-		socket.on("joinRoom", async ({ id, username, room }) => {
+		socket.on("joinRoom", async ({ room }) => {
+			console.log(room);
 			if (isNaN(room)) {
 				socket.emit("error", systemMessage("invalid Room"));
 			} else {
-				const user = await userJoin(socket.id, id, username, room);
+				const user = await userJoin(
+					socket.id,
+					socket.uid,
+					socket.nickname,
+					room
+				);
 				socket.join(user.room);
 				socket.emit("message", systemMessage("welcome to chat"));
 				io.to(user.room).emit("roomUsers", {
@@ -30,14 +36,14 @@ module.exports = (io) => {
 					message = JSON.parse(message);
 					let data =
 						message.type === "text"
-							? textMessage(user.id, message.text, user.username)
+							? textMessage(user.uid, user.nickname, message.text)
 							: {};
 					data =
 						message.type === "image"
 							? imageMessage(
-									user.id,
+									user.uid,
+									user.nickname,
 									message.text,
-									user.username,
 									message.imageUrl
 							  )
 							: data;
@@ -53,7 +59,7 @@ module.exports = (io) => {
 						const room = user.room;
 						io.to(room).emit(
 							"message",
-							systemMessage(`user ${user.id} left the chat`)
+							systemMessage(`user ${user.uid} left the chat`)
 						);
 						io.to(room).emit("roomUsers", {
 							room: user.room,

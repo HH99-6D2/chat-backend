@@ -8,6 +8,7 @@ WS Backend app
       const socket = io({
           auth: {
               token: localStorage.getItem("token"),
+              nickname: localStorage.getItem("token"),
           },
       });
 
@@ -21,9 +22,14 @@ Events
       .. code-block:: javascript
 
          socket.on("connect_error", (err)=> {
-               console.log(err.message); // not Authorized
-               console.log(err.data); // retry with login
+               console.log(err.message); // E01
+               console.log(err.data); // {content: refresh required}
          })
+
+      - message: E01 (Token Expired) / content: refresh required
+      - message: E02 (invalid token) / content: login required
+      - message: E03 (wrong)  / content: wrong (login again)
+      - message: E04 (nickname required)  / content: nickname required
 
    - ``roomUsers``\: 방의 유저들의 접속상태를 변경시에 알립니다.
 
@@ -52,10 +58,11 @@ Events
 
    - ``chatMessage``\: 메세지를 서버로 전달합니다.
 
-   .. code-block:: javascript
+      .. code-block:: javascript
 
-		socket.emit("chatMessage", JSON.stringify({ type: "text", text })); // 일반 메세지
-		socket.emit("chatMessage", JSON.stringify({ type: "image", text, imageUrl })); // 이미지와 메세지
+         socket.emit("chatMessage", JSON.stringify({ type: "text", text})); // 일반 메세지
+
+         socket.emit("chatMessage", JSON.stringify({ type: "image", text, imageUrl})); // 이미지와 메세지
 
 MESSAGES
 ^^^^^^^^
@@ -76,10 +83,10 @@ MESSAGES
 
       {
           type: "text",
-          id: number,
-          text: string,
-          username: string,
-          time: moment().format("h:mm a")
+          id: number, // user id
+          text: string, // message
+          nickname: string, // user nickname
+          time: moment().format("h:mm a") // "4:41 pm"
       }
 
 :Image:
@@ -90,7 +97,8 @@ MESSAGES
           type: "image",
           id: number,
           text: string,
-          username: string,
+          nickname: string,
           imageUrl: string,
           time: moment().format("h:mm a")
       }
+

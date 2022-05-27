@@ -4,21 +4,22 @@ module.exports.systemMessage = (text) => {
 	return { type: "system", text, time: moment().format("h:mm a") };
 };
 
-module.exports.textMessage = (id, text, username) => {
+module.exports.textMessage = (id, nickname, text) => {
 	return {
 		type: "text",
 		id,
+		nickname,
 		text,
-		username,
 		time: moment().format("h:mm a"),
 	};
 };
-module.exports.imageMessage = (id, text, username, imageUrl) => {
+
+module.exports.imageMessage = (id, nickname, text, imageUrl) => {
 	return {
 		type: "image",
 		id,
+		nickname,
 		text,
-		username,
 		imageUrl,
 		time: moment().format("h:mm a"),
 	};

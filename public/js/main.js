@@ -4,16 +4,19 @@ const roomName = document.getElementById("room-name");
 const userList = document.getElementById("users");
 
 // Get username and room from URL
-const { room, username } = Qs.parse(location.search, {
+const { room } = Qs.parse(location.search, {
 	ignoreQueryPrefix: true,
 });
 
-const id = 1;
 if (room !== undefined) {
+	const token = localStorage.getItem("token");
+	const nickname = localStorage.getItem("nickname");
+
 	//	const socket = io("https://test.junehan-test.shop");
 	const socket = io({
 		auth: {
-			token: localStorage.getItem("token"),
+			token,
+			nickname,
 		},
 	});
 
@@ -24,7 +27,7 @@ if (room !== undefined) {
 	});
 
 	// Join chatroom
-	socket.emit("joinRoom", { id, username, room });
+	socket.emit("joinRoom", { room });
 
 	// Get room and users
 	socket.on("roomUsers", ({ room, users }) => {
@@ -70,7 +73,7 @@ function outputMessage(message) {
 	div.classList.add("message");
 	const p = document.createElement("p");
 	p.classList.add("meta");
-	p.innerText = message.username;
+	p.innerText = message.nickname;
 	p.innerHTML += `<span>${message.time}</span>`;
 	div.appendChild(p);
 	const para = document.createElement("p");
@@ -90,7 +93,8 @@ function outputUsers(users) {
 	userList.innerHTML = "";
 	users.forEach((user) => {
 		const li = document.createElement("li");
-		li.innerText = user.username;
+		li.innerText = user.nickname;
+		li.id = user.id;
 		userList.appendChild(li);
 	});
 }

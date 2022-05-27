@@ -15,7 +15,6 @@ const io = socketio(server, {
 	cors: {
 		origin: "http://localhost:3000",
 		methods: ["GET", "POST"],
-		//	allowedHeaders: ["Authorization"],
 	},
 });
 
@@ -24,15 +23,38 @@ io.use((socket, next) => {
 	const jwt = require("jsonwebtoken");
 	jwt.verify(token, "galv", function (err, decoded) {
 		if (err) {
-			const err = new Error("not Authorized");
-			err.data = { content: "retry with login" };
-			next(err);
+			if (err.name === "TokenExpiredError") {
+				const err = new Error("E01");
+				err.data = { content: "refresh required" };
+				next(err);
+			} else if (err.name === "JsonWebTokenError") {
+				const err = new Error("E02");
+				err.data = { content: "login required" };
+				next(err);
+			} else {
+				const err = new Error("E03");
+				err.data = { content: "wrong" };
+				next(err);
+			}
 		} else {
-			console.log(decoded);
 			socket.uid = decoded.id;
 			next();
 		}
 	});
+});
+
+io.use((socket, next) => {
+	const nickname = socket.handshake.auth.nickname;
+	console.log(nickname);
+	if (!nickname) {
+		const err = new Error("E04");
+		err.data = { content: "nickname required" };
+		next(err);
+	} else {
+		socket.nickname = nickname;
+		console.log(socket.nickname);
+		next();
+	}
 });
 
 const mapEvents = require("./srcs/events");

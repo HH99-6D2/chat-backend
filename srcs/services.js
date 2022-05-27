@@ -2,12 +2,11 @@ const users = [];
 const rooms = {};
 // JOIN USER TO Chat;
 //
-async function userJoin(socketId, id, username, room) {
-	const user = { socketId, id, username, room };
-	if (room !== 0) {
-		rooms[`${room}`] = rooms[`${room}`] ? rooms[`${room}`] + 1 : 1;
-		users.push(user);
-	}
+async function userJoin(socketId, id, nickname, room) {
+	const user = { socketId, id, nickname, room };
+	rooms[`${room}`] = rooms[`${room}`] ? rooms[`${room}`] + 1 : 1;
+	users.push(user);
+	console.log(users);
 	return user;
 }
 
