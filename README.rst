@@ -19,8 +19,8 @@ WS Backend app
 
    - redis 조작 연습
 
-HOWTO
-^^^^^
+HOWTO (v0.1)
+^^^^^^^^^^^^
 
 - Conection
 
@@ -58,6 +58,15 @@ Events
       - message: E02 (invalid token) / content: login required
       - message: E03 (wrong)  / content: wrong (login again)
       - message: E04 (nickname required)  / content: nickname required
+
+   -  **(v0.2 포함되지 않은 사양)** ``chat_error``\: Chat중의 Room에 대한 에러 혹은 메세지에 대한 에러 등이 포함됩니다.
+
+      .. code-block:: javascript
+
+         socket.on("chat_error", (err)=> {
+               console.log(err.type); // E05 ~ E08
+               console.log(err.text); // Room invalid || Chat type Error
+         })
 
    - ``roomUsers``\: 방의 유저들의 접속상태를 변경시에 알립니다.
 
@@ -130,3 +139,17 @@ MESSAGES
           time: moment().format("h:mm a")
       }
 
+
+:ErrorMessage: **(v0.2 포함되지 않은 사양)** 연결시(connect)에 발생하는 문제가 아니라 진행중에 발생하는 문제이기 때문에, 비정상적인 입력을 전제합니다.
+
+   .. code-block:: json
+
+      {
+          type: string, // "E05", "E0*"
+          text: string  // "in" 
+      }
+
+   - errorMessage("E05", "Invalid Room number")
+   - errorMessage("E06", "Room Expired or not opened")
+   - errorMessage("E07", "Already Joined, NO accept multiple socket per user")
+   - errorMessage("E08", "Invalid message Type")
