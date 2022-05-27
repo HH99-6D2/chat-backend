@@ -4,13 +4,13 @@ const roomName = document.getElementById("room-name");
 const userList = document.getElementById("users");
 
 // Get username and room from URL
-const { room } = Qs.parse(location.search, {
+const { room, username } = Qs.parse(location.search, {
 	ignoreQueryPrefix: true,
 });
 
 const id = 1;
 if (room !== undefined) {
-	const username = "johneDoe";
+	//	const socket = io("https://test.junehan-test.shop");
 	const socket = io();
 
 	// Join chatroom
@@ -24,7 +24,6 @@ if (room !== undefined) {
 
 	// Message from server
 	socket.on("message", (message) => {
-		console.log("message", message);
 		if (message.type === "system") {
 			console.log(message);
 		} else if (message.type === "text") {
