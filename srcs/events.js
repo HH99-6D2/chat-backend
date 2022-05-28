@@ -11,6 +11,7 @@ const {
 	getRoomUsers,
 	saveMessage,
 	getLogs,
+	validateRoom,
 } = require("./services");
 
 module.exports = (io) => {
@@ -46,18 +47,37 @@ module.exports = (io) => {
 				);
 			}
 			*/
+			const isInvalid = await validateRoom(room);
+			if (isInvalid) {
+				if (isInvalid === -1)
+					return socket.emit(
+						"chat_error",
+						errorMessage("E12", "Invalid Room number (Not Exist)")
+					);
+				return isInvalid === 1
+					? socket.emit(
+							"chat_error",
+							errorMessage("E13", "Room not opened")
+					  )
+					: socket.emit(
+							"chat_error",
+							errorMessage("E14", "Room Expired")
+					  );
+			}
+
 			const user = await userJoin(
 				socket.id,
 				socket.uid,
 				socket.nickname,
 				room
 			);
+
 			socket.join(`${user.room}`);
 			if (user === null) {
 				return socket.emit(
 					"chat_error",
 					errorMessage(
-						"E14",
+						"E10",
 						"Internal Server Error, Not able to join"
 					)
 				);
@@ -93,23 +113,15 @@ module.exports = (io) => {
 							  )
 							: data;
 
-					data !== null
-						? io.to(room).emit("message", data)
-						: socket.emit(
-								"chat_error",
-								errorMessage("E13", "Invalid message Type")
-						  );
-					console.log("SAVED1", room);
-					if (data) {
-						console.log("SAVED2");
-						const saved = await saveMessage(
-							socket.redisClient,
-							room,
-							data
+					if (data !== null) {
+						io.to(room).emit("message", data);
+						await saveMessage(socket.redisClient, room, data);
+					} else {
+						socket.emit(
+							"chat_error",
+							errorMessage("E16", "Invalid message Type")
 						);
-						console.log(saved);
 					}
-					console.log("SAVED2");
 				});
 
 				socket.on("disconnect", async () => {

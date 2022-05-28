@@ -175,10 +175,12 @@ MESSAGES
           text: string  // "in" 
       }
 
+   - errorMessage("E10", "Internal Server Error, Not able to join room")
    - errorMessage("E11", "Invalid Room number")
-   - errorMessage("E12", "Room Expired or not opened")
-   - errorMessage("E13", "Invalid message Type")
-   - errorMessage("E14", "Internal Server Error, Not able to join room")
+   - errorMessage("E12", "Invalid Room number (Not Exist)")
+   - errorMessage("E13", "Room not opened")
+   - errorMessage("E14", "Room Expired")
+   - errorMessage("E16", "Invalid message Type")
 
    .. note::
 

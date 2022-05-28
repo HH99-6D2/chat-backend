@@ -1,3 +1,4 @@
+const axios = require("axios");
 const users = [];
 const rooms = {};
 
@@ -51,7 +52,8 @@ async function saveMessage(client, room, message) {
 	let data = await client.get(room);
 	console.log(2);
 	console.log(3, data);
-	if (!data){
+	if (!data) {
+		validateRoom(room);
 		await client.set(room, "[]");
 		data = await client.get(room);
 	}
@@ -59,6 +61,22 @@ async function saveMessage(client, room, message) {
 	const json = JSON.parse(data);
 	json.push(message);
 	return client.set(room, JSON.stringify(json));
+}
+
+async function validateRoom(room) {
+	const ret = await axios
+		.get(`https://yogoloper.shop/api/rooms/${room}`)
+		.then((res) => res)
+		.catch((err) => {
+			return 0;
+		});
+	if (ret && ret.status === 200) {
+		const { startDate, endDate } = ret.data;
+		const now = new Date(Date.now());
+		if (new Date(startDate) > now) return 1;
+		return new Date(endDate) < now ? 2 : 0;
+	}
+	return -1;
 }
 
 /* // DEPRECATE on v0.2
@@ -74,4 +92,5 @@ module.exports = {
 	getRoomUsers,
 	getLogs,
 	saveMessage,
+	validateRoom,
 };
