@@ -9,9 +9,11 @@ const {
 	getCurrentUser,
 	userLeave,
 	getRoomUsers,
+	saveMessage,
+	getLogs
 } = require("./services");
 
-module.exports = (io) => {
+module.exports = (io, client) => {
 	io.on("connection", async (socket) => {
 		socket.on("joinRoom", async ({ room }) => {
 			if (isNaN(room)) {
@@ -21,7 +23,7 @@ module.exports = (io) => {
 				);
 			}
 
-			await userLeave(socket.id);
+			await userLeave(client, socket.id);
 			/* DEPRECATE ON v0.2
 			if (isJoined(room, socket.id, socket.uid)) {
 				return socket.emit(
@@ -61,6 +63,7 @@ module.exports = (io) => {
 				);
 			} else {
 				socket.emit("message", systemMessage("welcome to chat"));
+				socket.emit("history", await getLogs(client, room));
 				io.to(room).emit("roomUsers", {
 					room: room,
 					users: await getRoomUsers(room),
@@ -73,8 +76,9 @@ module.exports = (io) => {
 
 				socket.on("chatMessage", async (message) => {
 					const user = await getCurrentUser(socket.id);
+					const room = user.room;
 					message = JSON.parse(message);
-					console.log("got message", message);
+					console.log(message);
 					let data =
 						message.type === "text"
 							? textMessage(user.id, user.nickname, message.text)
@@ -89,17 +93,23 @@ module.exports = (io) => {
 							  )
 							: data;
 
-					console.log(data);
 					data !== null
 						? io.to(room).emit("message", data)
 						: socket.emit(
 								"chat_error",
 								errorMessage("E08", "Invalid message Type")
 						  );
+					console.log("SAVED1", room);
+					if (data) {
+						console.log("SAVED2");
+						const saved = await saveMessage(client, room, data);
+						console.log(saved);
+					}
+					console.log("SAVED2");
 				});
 
 				socket.on("disconnect", async () => {
-					const user = await userLeave(socket.id);
+					const user = await userLeave(client, socket.id);
 					if (user) {
 						const room = user.room;
 						io.to(room).emit(

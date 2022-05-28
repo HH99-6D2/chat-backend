@@ -16,8 +16,10 @@ const io = socketio(server, {
 	cors: {
 		origin: "http://localhost:3000",
 		methods: ["GET", "POST"],
+		credentials: false,
 	},
 });
+
 io.use((socket, next) => {
 	const token = socket.handshake.auth.token;
 	const jwt = require("jsonwebtoken");
@@ -64,10 +66,19 @@ io.use((socket, next) => {
 	}
 });
 
+// Redis client
+const { createClient } = require("redis");
+const client = createClient({
+	url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+});
+client.on("ERROR", (err) => console.log("Redis client error", err));
+client.connect();
+
 const mapEvents = require("./srcs/events");
-mapEvents(io);
+mapEvents(io, client);
 
 // Redis adapter
+/*
 const { createClient } = require("redis");
 const { createAdapter } = require("@socket.io/redis-adapter");
 const pubClient = createClient({
@@ -83,7 +94,6 @@ subClient.on("error", (err) => {
 	console.log(err.message);
 });
 
-/*
 const PORT = 3000 || process.env.PORT;
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
 	io.adapter(createAdapter(pubClient, subClient));

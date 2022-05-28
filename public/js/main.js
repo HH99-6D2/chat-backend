@@ -42,6 +42,10 @@ if (room !== undefined) {
 		outputUsers(users);
 	});
 
+	socket.on("history", (logs) => {
+		console.log("history", logs);
+	});
+
 	// Message from server
 	socket.on("message", (message) => {
 		if (message.type === "system") {
