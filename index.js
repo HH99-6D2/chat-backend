@@ -25,23 +25,18 @@ io.use((socket, next) => {
 	const jwt = require("jsonwebtoken");
 	jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
 		if (err) {
-			/*
+			let error;
 			if (err.name === "TokenExpiredError") {
-				const err = new Error("E01");
-				err.data = { content: "refresh required" };
-				next(err);
+				error = new Error("E01");
+				error.data = { content: "refresh required" };
 			} else if (err.name === "JsonWebTokenError") {
-				const err = new Error("E02");
-				err.data = { content: "login required" };
-				next(err);
+				error = new Error("E02");
+				error.data = { content: "login required" };
 			} else {
-				const err = new Error("E03");
-				err.data = { content: "wrong" };
-				next(err);
+				error = new Error("E03");
+				error.data = { content: "wrong" };
 			}
-			*/
-			socket.uid = 1000;
-			next();
+			next(error);
 		} else {
 			socket.uid = decoded.id;
 			next();
@@ -51,16 +46,16 @@ io.use((socket, next) => {
 
 io.use((socket, next) => {
 	const nickname = socket.handshake.auth.nickname;
-	const cType = socket.handshake.auth.cType || "0";
+	const cType = socket.handshake.auth.cType;
 	socket.cType = cType;
 	if (!nickname) {
-		/*
 		const err = new Error("E04");
 		err.data = { content: "nickname required" };
 		next(err);
-		*/
-		socket.nickname = "ANONYMOUS";
-		next();
+	} else if (!cType) {
+		const err = new Error("E05");
+		err.data = { content: "cType required" };
+		next(err);
 	} else {
 		socket.nickname = nickname;
 		next();
@@ -79,7 +74,7 @@ io.use(async (socket, next) => {
 		next();
 	} catch (error) {
 		console.log("REDIS CONN ERROR", error);
-		const err = new Error("E05");
+		const err = new Error("E06");
 		err.data = { content: "Redis Connection Error" };
 		next(err);
 	}

@@ -34,8 +34,9 @@ HOWTO (v0.1 -> v0.2)
 
       const socket = io("https://test.junehan-test.shop", {
           auth: {
-              token: localStorage.getItem("token"),
-              nickname: localStorage.getItem("token"),
+              token: localStorage.getItem("token"), // "asjdkajsdlk"
+              nickname: localStorage.getItem("nickname"), // testUser
+              cType: localStorage.getItem("ctype") // '1'
           },
       });
 
@@ -49,6 +50,7 @@ HOWTO (v0.1 -> v0.2)
    - 기본적으로 client에서 Location이 변경되면(새로고침) disconnect이벤트가 발생하여 방에서 나가집니다.
 
    - 다른방에 Join할 경우에 기존의 방에서 나가지는 스펙을 추가하였습니다. 따라서 detach라는 메뉴얼한 새로운 이벤트를 정의할 필요가 있습니다.(로비에 나갔을때 더이상 알림을 받지 않도록 소켓은 유지하되 방에서는 나가는.)
+
 Events
 ^^^^^^
 
@@ -67,7 +69,8 @@ Events
       - message: E02 (invalid token) / content: login required
       - message: E03 (wrong)  / content: wrong (login again)
       - message: E04 (nickname required)  / content: nickname required
-      - message: E05 (redis conn error)  / content: Redis Connection Error
+      - message: E05 (cType required)  / content: cType required
+      - message: E06 (redis conn error)  / content: Redis Connection Error
 
    -  **v0.2** ``chat_error``\: Chat중의 Room에 대한 에러 혹은 메세지에 대한 에러 등이 포함됩니다.
 
@@ -88,6 +91,16 @@ Events
              outputRoomName(room);
              outputUsers(users);
          });
+
+      .. code-block:: json
+
+         [
+             {
+                 "id": 5,
+                 "nickname": "ANONYMOUS",
+                 "cType": "1"
+             }
+         ]
 
    - ``message``\: 서버에서 메세지를 같은 방의 다른유저들에게 전달합니다.
 
@@ -130,8 +143,6 @@ Events
       .. code-block:: javascript
 
          socket.emit("leaveRoom"); // 일반 메세지
-
-
 
 MESSAGES
 ^^^^^^^^

@@ -11,7 +11,6 @@ const { room } = Qs.parse(location.search, {
 if (room !== undefined) {
 	const token = localStorage.getItem("token");
 	const nickname = localStorage.getItem("nickname");
-
 	const socket = io(
 		//"https://test.junehan-test.shop",
 		{
@@ -39,7 +38,6 @@ if (room !== undefined) {
 
 	// Get room and users
 	socket.on("roomUsers", ({ room, users }) => {
-		console.log(users);
 		outputRoomName(room);
 		outputUsers(users);
 	});
