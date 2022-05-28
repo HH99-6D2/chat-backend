@@ -18,6 +18,7 @@ if (room !== undefined) {
 			auth: {
 				token,
 				nickname,
+				cType: "1",
 			},
 		}
 	);
@@ -38,6 +39,7 @@ if (room !== undefined) {
 
 	// Get room and users
 	socket.on("roomUsers", ({ room, users }) => {
+		console.log(users);
 		outputRoomName(room);
 		outputUsers(users);
 	});

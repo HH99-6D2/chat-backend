@@ -3,8 +3,8 @@ const users = [];
 const rooms = {};
 
 // JOIN USER TO Chat;
-async function userJoin(socketId, id, nickname, room) {
-	const user = { socketId, id, nickname, room };
+async function userJoin(socketId, id, nickname, cType, room) {
+	const user = { socketId, id, nickname, cType, room };
 	rooms[`${room}`] = rooms[`${room}`] ? rooms[`${room}`] + 1 : 1;
 	users.push(user);
 	console.log("join users", users);
@@ -34,7 +34,11 @@ async function userLeave(client, id) {
 }
 
 async function getRoomUsers(room) {
-	return users.filter((user) => user.room === room);
+	return users
+		.filter((user) => user.room === room)
+		.map((user) => {
+			return { id: user.id, nickname: user.nickname, cType: user.cType };
+		});
 }
 
 async function getLogs(client, room) {

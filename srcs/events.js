@@ -48,7 +48,7 @@ module.exports = (io) => {
 			}
 			*/
 			const isInvalid = await validateRoom(room);
-			if (isInvalid) {
+			if (isInvalid !== 0) {
 				if (isInvalid === -1)
 					return socket.emit(
 						"chat_error",
@@ -69,6 +69,7 @@ module.exports = (io) => {
 				socket.id,
 				socket.uid,
 				socket.nickname,
+				socket.cType,
 				room
 			);
 

@@ -51,7 +51,8 @@ io.use((socket, next) => {
 
 io.use((socket, next) => {
 	const nickname = socket.handshake.auth.nickname;
-	console.log(nickname);
+	const cType = socket.handshake.auth.cType || "0";
+	socket.cType = cType;
 	if (!nickname) {
 		/*
 		const err = new Error("E04");
