@@ -8,6 +8,7 @@ const server = http.createServer(app);
 // HTML
 const path = require("path");
 app.use(express.static(path.join(__dirname, "public")));
+require("dotenv").config();
 
 // SOCKET IO with CORS and header
 const socketio = require("socket.io");
@@ -15,12 +16,14 @@ const io = socketio(server, {
 	cors: {
 		origin: "http://localhost:3000",
 		methods: ["GET", "POST"],
+		credentials: false,
 	},
 });
+
 io.use((socket, next) => {
 	const token = socket.handshake.auth.token;
 	const jwt = require("jsonwebtoken");
-	jwt.verify(token, "galv", function (err, decoded) {
+	jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
 		if (err) {
 			/*
 			if (err.name === "TokenExpiredError") {
@@ -48,7 +51,8 @@ io.use((socket, next) => {
 
 io.use((socket, next) => {
 	const nickname = socket.handshake.auth.nickname;
-	console.log(nickname);
+	const cType = socket.handshake.auth.cType || "0";
+	socket.cType = cType;
 	if (!nickname) {
 		/*
 		const err = new Error("E04");
@@ -63,29 +67,27 @@ io.use((socket, next) => {
 	}
 });
 
+// Redis client
+io.use(async (socket, next) => {
+	const { createClient } = require("redis");
+	try {
+		const client = createClient({
+			url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+		});
+		await client.connect();
+		socket.redisClient = client;
+		next();
+	} catch (error) {
+		console.log("REDIS CONN ERROR", error);
+		const err = new Error("E05");
+		err.data = { content: "Redis Connection Error" };
+		next(err);
+	}
+});
+
 const mapEvents = require("./srcs/events");
 mapEvents(io);
 
-// Redis adapter
-/*
-const { createClient } = require("redis");
-const { createAdapter } = require("@socket.io/redis-adapter");
-const pubClient = createClient({ host: "localhost", port: 6379 });
-const subClient = pubClient.duplicate();
-
-pubClient.on("error", (err) => {
-	console.log(err.message);
-});
-subClient.on("error", (err) => {
-	console.log(err.message);
-});
-
-const PORT = 3000 || process.env.PORT;
-Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
-	io.adapter(createAdapter(pubClient, subClient));
-	server.listen(PORT, () => console.log(`Sever run on ${PORT}`));
-});
-*/
 const PORT = 3000 || process.env.PORT;
 
 server.listen(PORT, () => console.log(`Sever run on ${PORT}`));

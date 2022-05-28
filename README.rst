@@ -5,11 +5,11 @@ WS Backend app
 ---------------------------
 
    - socket Backend redis로 변경 (x)
-   - service의 기능들 redis기능으로 변경 (x)
+   - service의 기능들 redis기능으로 변경 (DONE)
 
       - Event: "history" - 해당 room의 로그를 가져옴
 
-   - room에 대한 유효성 검사 (x)
+   - room에 대한 유효성 검사 (Done)
    - Event: "chat_error" 이벤트 정의 (DONE)
 
       - 방에 중복 로그인 할수없다. *(이미 같은 유저가 해당 방에 들어와 있다.)*
@@ -17,7 +17,7 @@ WS Backend app
       - 백엔드가 불가피하게 종료하였다? *(동작중 레디스 백엔드가 Stop 했을 때 서버에서 소켓을 핸들링 가능하다면, 해당 서버를 통한 소켓만 핸들링 가능할 가능성이 높음)*
       - 채팅방 번호가 유효한 숫자가 아닐 경우 *(connection 이후 join(room)을 하기 때문에 해당소켓에 alert레벨의 별도 이벤트가 필요합니다.)*
 
-   - Event: "leave" 이벤트 정의 (x)
+   - Event: "leave" 이벤트 정의 (Done)
 
      - 다른방에 Join할 경우에 기존의 방에서 나가지는 스펙을 추가하였습니다. 하지만 클라이언트가 소켓을 유지할 경우 채팅 알림은 계속됩니다. 따라서 detach라는 개념의 메뉴얼한 새로운 이벤트를 정의할 필요가 있습니다.(로비에 나갔을 때 더이상 알림을 받지 않도록 소켓은 유지하되 방에서는 나가는.)
 
@@ -67,6 +67,7 @@ Events
       - message: E02 (invalid token) / content: login required
       - message: E03 (wrong)  / content: wrong (login again)
       - message: E04 (nickname required)  / content: nickname required
+      - message: E05 (redis conn error)  / content: Redis Connection Error
 
    -  **v0.2** ``chat_error``\: Chat중의 Room에 대한 에러 혹은 메세지에 대한 에러 등이 포함됩니다.
 
@@ -112,6 +113,26 @@ Events
 
          socket.emit("chatMessage", JSON.stringify({ type: "image", text, imageUrl})); // 이미지와 메세지
 
+   - ``history``\: **v0.2** 방의 참여자였을 경우 join이후 이 이벤트를 발생시키면 기존의 로그를 가져옵니다.
+
+      .. code-block:: javascript
+
+         socket.emit("history"); // 일반 메세지
+
+   - ``joinRoom``\: **v0.2**  방의 채팅에 참여합니다. (다양한 에러처리가 존재합니다.)
+
+      .. code-block:: javascript
+
+         socket.emit("joinRoom", { room: "1" }); // room id -> 유효성검사 + 연결
+
+   - ``leaveRoom``\: disconnect이벤트를 발생시킵니다. 새로고침을 하지 않는 경우 유용합니다.
+
+      .. code-block:: javascript
+
+         socket.emit("leaveRoom"); // 일반 메세지
+
+
+
 MESSAGES
 ^^^^^^^^
 
@@ -150,6 +171,13 @@ MESSAGES
           time: moment().format("h:mm a")
       }
 
+:History:
+
+   .. code-block:: json
+
+      [
+         <Image Message>, <Text Message> ...
+      ]
 
 :ErrorMessage: **v0.2** 연결시(connect)에 발생하는 문제가 아니라 진행중에 발생하는 문제이기 때문에, 비정상적인 입력을 전제합니다.
 
@@ -160,10 +188,12 @@ MESSAGES
           text: string  // "in" 
       }
 
-   - errorMessage("E05", "Invalid Room number")
-   - errorMessage("E06", "Room Expired or not opened")
-   - errorMessage("E08", "Invalid message Type")
-   - errorMessage("E09", "Internal Server Error, Not able to join room")
+   - errorMessage("E10", "Internal Server Error, Not able to join room")
+   - errorMessage("E11", "Invalid Room number")
+   - errorMessage("E12", "Invalid Room number (Not Exist)")
+   - errorMessage("E13", "Room not opened")
+   - errorMessage("E14", "Room Expired")
+   - errorMessage("E16", "Invalid message Type")
 
    .. note::
 

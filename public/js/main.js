@@ -18,6 +18,7 @@ if (room !== undefined) {
 			auth: {
 				token,
 				nickname,
+				cType: "1",
 			},
 		}
 	);
@@ -38,8 +39,13 @@ if (room !== undefined) {
 
 	// Get room and users
 	socket.on("roomUsers", ({ room, users }) => {
+		console.log(users);
 		outputRoomName(room);
 		outputUsers(users);
+	});
+
+	socket.on("history", (logs) => {
+		console.log("history", logs);
 	});
 
 	// Message from server
@@ -61,19 +67,37 @@ if (room !== undefined) {
 		}
 	});
 
+	document.getElementById("leave-btn").addEventListener("click", () => {
+		const leaveRoom = confirm(
+			"Are you sure you want to leave the chatroom?"
+		);
+		if (leaveRoom) {
+			socket.emit("leaveRoom");
+		}
+	});
 	// Message submit
 	chatForm.addEventListener("submit", (e) => {
 		e.preventDefault();
 
 		let type = e.target.elements.type.value;
 		let text = e.target.elements.msg.value;
+		let imageUrl = e.target.elements.imageUrl.value;
 
 		text = text.trim();
 
 		if (!text) {
 			return false;
 		}
-		socket.emit("chatMessage", JSON.stringify({ type, text }));
+		if (type === "text") {
+			socket.emit("chatMessage", JSON.stringify({ type, text }));
+		} else if (type === "image") {
+			socket.emit(
+				"chatMessage",
+				JSON.stringify({ type, text, imageUrl })
+			);
+		} else {
+			socket.emit("chatMessage", JSON.stringify({ type, text }));
+		}
 
 		// Clear input
 		e.target.elements.msg.value = "";
@@ -113,6 +137,7 @@ function outputUsers(users) {
 }
 
 //Prompt the user before leave chat room
+/*
 document.getElementById("leave-btn").addEventListener("click", () => {
 	const leaveRoom = confirm("Are you sure you want to leave the chatroom?");
 	if (leaveRoom) {
@@ -120,3 +145,4 @@ document.getElementById("leave-btn").addEventListener("click", () => {
 	} else {
 	}
 });
+*/

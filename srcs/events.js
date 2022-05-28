@@ -9,6 +9,9 @@ const {
 	getCurrentUser,
 	userLeave,
 	getRoomUsers,
+	saveMessage,
+	getLogs,
+	validateRoom,
 } = require("./services");
 
 module.exports = (io) => {
@@ -17,11 +20,11 @@ module.exports = (io) => {
 			if (isNaN(room)) {
 				return socket.emit(
 					"chat_error",
-					errorMessage("E05", "invalid Room")
+					errorMessage("E11", "Invalid Room number")
 				);
 			}
 
-			await userLeave(socket.id);
+			await userLeave(socket.redisClient, socket.id);
 			/* DEPRECATE ON v0.2
 			if (isJoined(room, socket.id, socket.uid)) {
 				return socket.emit(
@@ -38,29 +41,50 @@ module.exports = (io) => {
 				return socket.emit(
 					"chat_error",
 					errorMessage(
-						"E06",
+						"E12",
 						"Room Expired or not opened"
 					)
 				);
 			}
 			*/
+			const isInvalid = await validateRoom(room);
+			if (isInvalid !== 0) {
+				if (isInvalid === -1)
+					return socket.emit(
+						"chat_error",
+						errorMessage("E12", "Invalid Room number (Not Exist)")
+					);
+				return isInvalid === 1
+					? socket.emit(
+							"chat_error",
+							errorMessage("E13", "Room not opened")
+					  )
+					: socket.emit(
+							"chat_error",
+							errorMessage("E14", "Room Expired")
+					  );
+			}
+
 			const user = await userJoin(
 				socket.id,
 				socket.uid,
 				socket.nickname,
+				socket.cType,
 				room
 			);
+
 			socket.join(`${user.room}`);
 			if (user === null) {
 				return socket.emit(
 					"chat_error",
 					errorMessage(
-						"E09",
+						"E10",
 						"Internal Server Error, Not able to join"
 					)
 				);
 			} else {
 				socket.emit("message", systemMessage("welcome to chat"));
+				socket.emit("history", await getLogs(socket.redisClient, room));
 				io.to(room).emit("roomUsers", {
 					room: room,
 					users: await getRoomUsers(room),
@@ -73,8 +97,9 @@ module.exports = (io) => {
 
 				socket.on("chatMessage", async (message) => {
 					const user = await getCurrentUser(socket.id);
+					const room = user.room;
 					message = JSON.parse(message);
-					console.log("got message", message);
+					console.log(message);
 					let data =
 						message.type === "text"
 							? textMessage(user.id, user.nickname, message.text)
@@ -89,32 +114,37 @@ module.exports = (io) => {
 							  )
 							: data;
 
-					data !== null
-						? io.to(room).emit("message", data)
-						: socket.emit(
-								"chat_error",
-								errorMessage("E08", "Invalid message Type")
-						  );
+					if (data !== null) {
+						io.to(room).emit("message", data);
+						await saveMessage(socket.redisClient, room, data);
+					} else {
+						socket.emit(
+							"chat_error",
+							errorMessage("E16", "Invalid message Type")
+						);
+					}
+				});
+
+				socket.on("leaveRoom", async () => {
+					socket.emit(
+						"message",
+						systemMessage(`you Leave the chat room.`)
+					);
+					socket.disconnect();
 				});
 
 				socket.on("disconnect", async () => {
-					const user = await userLeave(socket.id);
-					if (user) {
-						const room = user.room;
-						io.to(room).emit(
-							"message",
-							systemMessage(`user ${user.uid} left the chat`)
-						);
-						io.to(room).emit("roomUsers", {
-							room: user.room,
-							users: await getRoomUsers(user.room),
-						});
-					} else {
-						socket.emit(
-							"error",
-							systemMessage("Not found in connected")
-						);
-					}
+					const user = await userLeave(socket.redisClient, socket.id);
+					console.log(user);
+					const room = user.room;
+					io.to(room).emit(
+						"message",
+						systemMessage(`user ${user.id} left the chat`)
+					);
+					io.to(room).emit("roomUsers", {
+						room: user.room,
+						users: await getRoomUsers(user.room),
+					});
 				});
 			}
 		});
