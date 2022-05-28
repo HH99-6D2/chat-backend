@@ -89,6 +89,7 @@ module.exports = (io) => {
 							  )
 							: data;
 
+					console.log(data);
 					data !== null
 						? io.to(room).emit("message", data)
 						: socket.emit(

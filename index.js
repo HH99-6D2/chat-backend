@@ -8,6 +8,7 @@ const server = http.createServer(app);
 // HTML
 const path = require("path");
 app.use(express.static(path.join(__dirname, "public")));
+require("dotenv").config();
 
 // SOCKET IO with CORS and header
 const socketio = require("socket.io");
@@ -20,7 +21,7 @@ const io = socketio(server, {
 io.use((socket, next) => {
 	const token = socket.handshake.auth.token;
 	const jwt = require("jsonwebtoken");
-	jwt.verify(token, "galv", function (err, decoded) {
+	jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
 		if (err) {
 			/*
 			if (err.name === "TokenExpiredError") {
@@ -67,10 +68,12 @@ const mapEvents = require("./srcs/events");
 mapEvents(io);
 
 // Redis adapter
-/*
 const { createClient } = require("redis");
 const { createAdapter } = require("@socket.io/redis-adapter");
-const pubClient = createClient({ host: "localhost", port: 6379 });
+const pubClient = createClient({
+	host: process.env.REDIS_HOST,
+	port: process.env.REDIS_PORT,
+});
 const subClient = pubClient.duplicate();
 
 pubClient.on("error", (err) => {
@@ -80,6 +83,7 @@ subClient.on("error", (err) => {
 	console.log(err.message);
 });
 
+/*
 const PORT = 3000 || process.env.PORT;
 Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
 	io.adapter(createAdapter(pubClient, subClient));
