@@ -67,39 +67,26 @@ io.use((socket, next) => {
 });
 
 // Redis client
-const { createClient } = require("redis");
-const client = createClient({
-	url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+io.use(async (socket, next) => {
+	const { createClient } = require("redis");
+	try {
+		const client = createClient({
+			url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+		});
+		await client.connect();
+		socket.redisClient = client;
+		next();
+	} catch (error) {
+		console.log("REDIS CONN ERROR", error);
+		const err = new Error("E05");
+		err.data = { content: "Redis Connection Error" };
+		next(err);
+	}
 });
-client.on("ERROR", (err) => console.log("Redis client error", err));
-client.connect();
 
 const mapEvents = require("./srcs/events");
-mapEvents(io, client);
+mapEvents(io);
 
-// Redis adapter
-/*
-const { createClient } = require("redis");
-const { createAdapter } = require("@socket.io/redis-adapter");
-const pubClient = createClient({
-	host: process.env.REDIS_HOST,
-	port: process.env.REDIS_PORT,
-});
-const subClient = pubClient.duplicate();
-
-pubClient.on("error", (err) => {
-	console.log(err.message);
-});
-subClient.on("error", (err) => {
-	console.log(err.message);
-});
-
-const PORT = 3000 || process.env.PORT;
-Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
-	io.adapter(createAdapter(pubClient, subClient));
-	server.listen(PORT, () => console.log(`Sever run on ${PORT}`));
-});
-*/
 const PORT = 3000 || process.env.PORT;
 
 server.listen(PORT, () => console.log(`Sever run on ${PORT}`));

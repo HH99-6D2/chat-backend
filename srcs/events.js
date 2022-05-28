@@ -10,20 +10,20 @@ const {
 	userLeave,
 	getRoomUsers,
 	saveMessage,
-	getLogs
+	getLogs,
 } = require("./services");
 
-module.exports = (io, client) => {
+module.exports = (io) => {
 	io.on("connection", async (socket) => {
 		socket.on("joinRoom", async ({ room }) => {
 			if (isNaN(room)) {
 				return socket.emit(
 					"chat_error",
-					errorMessage("E05", "invalid Room")
+					errorMessage("E11", "Invalid Room number")
 				);
 			}
 
-			await userLeave(client, socket.id);
+			await userLeave(socket.redisClient, socket.id);
 			/* DEPRECATE ON v0.2
 			if (isJoined(room, socket.id, socket.uid)) {
 				return socket.emit(
@@ -40,7 +40,7 @@ module.exports = (io, client) => {
 				return socket.emit(
 					"chat_error",
 					errorMessage(
-						"E06",
+						"E12",
 						"Room Expired or not opened"
 					)
 				);
@@ -57,13 +57,13 @@ module.exports = (io, client) => {
 				return socket.emit(
 					"chat_error",
 					errorMessage(
-						"E09",
+						"E14",
 						"Internal Server Error, Not able to join"
 					)
 				);
 			} else {
 				socket.emit("message", systemMessage("welcome to chat"));
-				socket.emit("history", await getLogs(client, room));
+				socket.emit("history", await getLogs(socket.redisClient, room));
 				io.to(room).emit("roomUsers", {
 					room: room,
 					users: await getRoomUsers(room),
@@ -97,19 +97,23 @@ module.exports = (io, client) => {
 						? io.to(room).emit("message", data)
 						: socket.emit(
 								"chat_error",
-								errorMessage("E08", "Invalid message Type")
+								errorMessage("E13", "Invalid message Type")
 						  );
 					console.log("SAVED1", room);
 					if (data) {
 						console.log("SAVED2");
-						const saved = await saveMessage(client, room, data);
+						const saved = await saveMessage(
+							socket.redisClient,
+							room,
+							data
+						);
 						console.log(saved);
 					}
 					console.log("SAVED2");
 				});
 
 				socket.on("disconnect", async () => {
-					const user = await userLeave(client, socket.id);
+					const user = await userLeave(socket.redisClient, socket.id);
 					if (user) {
 						const room = user.room;
 						io.to(room).emit(

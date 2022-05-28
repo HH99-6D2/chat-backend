@@ -5,7 +5,7 @@ WS Backend app
 ---------------------------
 
    - socket Backend redis로 변경 (x)
-   - service의 기능들 redis기능으로 변경 (x)
+   - service의 기능들 redis기능으로 변경 (DONE)
 
       - Event: "history" - 해당 room의 로그를 가져옴
 
@@ -67,6 +67,7 @@ Events
       - message: E02 (invalid token) / content: login required
       - message: E03 (wrong)  / content: wrong (login again)
       - message: E04 (nickname required)  / content: nickname required
+      - message: E05 (redis conn error)  / content: Redis Connection Error
 
    -  **v0.2** ``chat_error``\: Chat중의 Room에 대한 에러 혹은 메세지에 대한 에러 등이 포함됩니다.
 
@@ -112,6 +113,13 @@ Events
 
          socket.emit("chatMessage", JSON.stringify({ type: "image", text, imageUrl})); // 이미지와 메세지
 
+   - ``history``\: 방의 참여자였을 경우 join이후 이 이벤트를 발생시키면 기존의 로그를 가져옵니다.
+
+      .. code-block:: javascript
+
+         socket.emit("history"); // 일반 메세지
+
+
 MESSAGES
 ^^^^^^^^
 
@@ -150,6 +158,13 @@ MESSAGES
           time: moment().format("h:mm a")
       }
 
+:History:
+
+   .. code-block:: json
+
+      [
+         <Image Message>, <Text Message> ...
+      ]
 
 :ErrorMessage: **v0.2** 연결시(connect)에 발생하는 문제가 아니라 진행중에 발생하는 문제이기 때문에, 비정상적인 입력을 전제합니다.
 
@@ -160,10 +175,10 @@ MESSAGES
           text: string  // "in" 
       }
 
-   - errorMessage("E05", "Invalid Room number")
-   - errorMessage("E06", "Room Expired or not opened")
-   - errorMessage("E08", "Invalid message Type")
-   - errorMessage("E09", "Internal Server Error, Not able to join room")
+   - errorMessage("E11", "Invalid Room number")
+   - errorMessage("E12", "Room Expired or not opened")
+   - errorMessage("E13", "Invalid message Type")
+   - errorMessage("E14", "Internal Server Error, Not able to join room")
 
    .. note::
 

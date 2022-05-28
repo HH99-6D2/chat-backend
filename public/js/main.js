@@ -71,13 +71,21 @@ if (room !== undefined) {
 
 		let type = e.target.elements.type.value;
 		let text = e.target.elements.msg.value;
+		let imageUrl = e.target.elements.imageUrl.value;
 
 		text = text.trim();
 
 		if (!text) {
 			return false;
 		}
-		socket.emit("chatMessage", JSON.stringify({ type, text }));
+		if (type === "text") {
+			socket.emit("chatMessage", JSON.stringify({ type, text }));
+		}
+		else if (type === "image") {
+			socket.emit("chatMessage", JSON.stringify({ type, text, imageUrl }));
+		} else {
+			socket.emit("chatMessage", JSON.stringify({ type, text }));
+		}
 
 		// Clear input
 		e.target.elements.msg.value = "";
