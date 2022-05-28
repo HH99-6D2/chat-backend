@@ -65,6 +65,14 @@ if (room !== undefined) {
 		}
 	});
 
+	document.getElementById("leave-btn").addEventListener("click", () => {
+		const leaveRoom = confirm(
+			"Are you sure you want to leave the chatroom?"
+		);
+		if (leaveRoom) {
+			socket.emit("leaveRoom");
+		}
+	});
 	// Message submit
 	chatForm.addEventListener("submit", (e) => {
 		e.preventDefault();
@@ -80,9 +88,11 @@ if (room !== undefined) {
 		}
 		if (type === "text") {
 			socket.emit("chatMessage", JSON.stringify({ type, text }));
-		}
-		else if (type === "image") {
-			socket.emit("chatMessage", JSON.stringify({ type, text, imageUrl }));
+		} else if (type === "image") {
+			socket.emit(
+				"chatMessage",
+				JSON.stringify({ type, text, imageUrl })
+			);
 		} else {
 			socket.emit("chatMessage", JSON.stringify({ type, text }));
 		}
@@ -125,6 +135,7 @@ function outputUsers(users) {
 }
 
 //Prompt the user before leave chat room
+/*
 document.getElementById("leave-btn").addEventListener("click", () => {
 	const leaveRoom = confirm("Are you sure you want to leave the chatroom?");
 	if (leaveRoom) {
@@ -132,3 +143,4 @@ document.getElementById("leave-btn").addEventListener("click", () => {
 	} else {
 	}
 });
+*/

@@ -124,24 +124,26 @@ module.exports = (io) => {
 					}
 				});
 
+				socket.on("leaveRoom", async () => {
+					socket.emit(
+						"message",
+						systemMessage(`you Leave the chat room.`)
+					);
+					socket.disconnect();
+				});
+
 				socket.on("disconnect", async () => {
 					const user = await userLeave(socket.redisClient, socket.id);
-					if (user) {
-						const room = user.room;
-						io.to(room).emit(
-							"message",
-							systemMessage(`user ${user.uid} left the chat`)
-						);
-						io.to(room).emit("roomUsers", {
-							room: user.room,
-							users: await getRoomUsers(user.room),
-						});
-					} else {
-						socket.emit(
-							"error",
-							systemMessage("Not found in connected")
-						);
-					}
+					console.log(user);
+					const room = user.room;
+					io.to(room).emit(
+						"message",
+						systemMessage(`user ${user.id} left the chat`)
+					);
+					io.to(room).emit("roomUsers", {
+						room: user.room,
+						users: await getRoomUsers(user.room),
+					});
 				});
 			}
 		});
