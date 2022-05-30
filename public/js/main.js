@@ -11,13 +11,14 @@ const { room } = Qs.parse(location.search, {
 if (room !== undefined) {
 	const token = localStorage.getItem("token");
 	const nickname = localStorage.getItem("nickname");
+	const cType = localStorage.getItem("cType");
 	const socket = io(
 		//"https://test.junehan-test.shop",
 		{
 			auth: {
 				token,
 				nickname,
-				cType: "1",
+				cType,
 			},
 		}
 	);
