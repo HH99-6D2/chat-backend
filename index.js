@@ -21,7 +21,7 @@ const io = socketio(server, {
 });
 
 io.use((socket, next) => {
-	const token = socket.handshake.auth.token;
+	const token = socket.handshake.auth.token || "";
 	const jwt = require("jsonwebtoken");
 	jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
 		if (err) {
@@ -34,7 +34,7 @@ io.use((socket, next) => {
 				error.data = { content: "login required" };
 			} else {
 				error = new Error("E03");
-				error.data = { content: "wrong" };
+				error.data = { content: "wrong TOKEN" };
 			}
 			next(error);
 		} else {
@@ -73,7 +73,6 @@ io.use(async (socket, next) => {
 		socket.redisClient = client;
 		next();
 	} catch (error) {
-		console.log("REDIS CONN ERROR", error);
 		const err = new Error("E06");
 		err.data = { content: "Redis Connection Error" };
 		next(err);

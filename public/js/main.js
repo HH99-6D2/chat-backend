@@ -38,10 +38,14 @@ if (room !== undefined) {
 
 	// Get room and users
 	socket.on("roomUsers", ({ room, users }) => {
+		console.log(users);
 		outputRoomName(room);
 		outputUsers(users);
 	});
 
+	socket.on("timeout", (time) => {
+		console.log("left: ", time);
+	});
 	socket.on("history", (logs) => {
 		console.log("history", logs);
 	});
@@ -73,6 +77,13 @@ if (room !== undefined) {
 			socket.emit("leaveRoom");
 		}
 	});
+	document.getElementById("off-btn").addEventListener("click", () => {
+		const offRoom = confirm("Are you sure you want to off the chatroom?");
+		if (offRoom) {
+			socket.emit("offRoom");
+		}
+	});
+
 	// Message submit
 	chatForm.addEventListener("submit", (e) => {
 		e.preventDefault();

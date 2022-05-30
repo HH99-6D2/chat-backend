@@ -8,10 +8,12 @@ const {
 	userJoin,
 	getCurrentUser,
 	userLeave,
+	roomLeave,
 	getRoomUsers,
 	saveMessage,
 	getLogs,
 	validateRoom,
+	roomJoin,
 } = require("./services");
 
 module.exports = (io) => {
@@ -24,29 +26,6 @@ module.exports = (io) => {
 				);
 			}
 
-			await userLeave(socket.redisClient, socket.id);
-			/* DEPRECATE ON v0.2
-			if (isJoined(room, socket.id, socket.uid)) {
-				return socket.emit(
-					"chat_error",
-					errorMessage(
-						"E07",
-						"Already Joined, NO accept multiple socket per user"
-					)
-				);
-			}
-			*/
-			/* Will be on v0.2
-			if (isNotOpen(room)) {
-				return socket.emit(
-					"chat_error",
-					errorMessage(
-						"E12",
-						"Room Expired or not opened"
-					)
-				);
-			}
-			*/
 			const isInvalid = await validateRoom(room);
 			if (isInvalid !== 0) {
 				if (isInvalid === -1)
@@ -65,29 +44,40 @@ module.exports = (io) => {
 					  );
 			}
 
+			const joinedUser = await userLeave(socket.uid);
+
+			if (joinedUser !== null) {
+				console.log(joinedUser.room, "was in the room");
+				socket.leave(joinedUser.room);
+			}
+
 			const user = await userJoin(
-				socket.id,
 				socket.uid,
 				socket.nickname,
 				socket.cType,
 				room
 			);
 
-			socket.join(`${user.room}`);
 			if (user === null) {
 				return socket.emit(
 					"chat_error",
 					errorMessage(
 						"E10",
-						"Internal Server Error, Not able to join"
+						"Internal Server Error, another socket is connected"
 					)
 				);
 			} else {
-				socket.emit("message", systemMessage("welcome to chat"));
+				const timeout = await roomJoin(socket, room, io);
+
+				socket.room = room;
+				socket.join(`${user.room}`); // 소켓연결코드
 				socket.emit("history", await getLogs(socket.redisClient, room));
+				socket.emit("timeout", timeout); // 남은시간
+
+				const roomUsers = await getRoomUsers(room);
 				io.to(room).emit("roomUsers", {
 					room: room,
-					users: await getRoomUsers(room),
+					users: roomUsers,
 				});
 
 				io.to(room).emit(
@@ -96,7 +86,13 @@ module.exports = (io) => {
 				);
 
 				socket.on("chatMessage", async (message) => {
-					const user = await getCurrentUser(socket.id);
+					const user = await getCurrentUser(socket.uid);
+					if (!user)
+						return socket.emit(
+							"chat_error",
+							errorMessage("E17", "User not belong to any room")
+						);
+
 					const room = user.room;
 					message = JSON.parse(message);
 					console.log(message);
@@ -115,8 +111,16 @@ module.exports = (io) => {
 							: data;
 
 					if (data !== null) {
-						io.to(room).emit("message", data);
-						await saveMessage(socket.redisClient, room, data);
+						const saved = await saveMessage(
+							socket.redisClient,
+							room,
+							data
+						);
+						if (saved) {
+							io.to(room).emit("message", data);
+						} else {
+							closeRoom(room);
+						}
 					} else {
 						socket.emit(
 							"chat_error",
@@ -126,25 +130,58 @@ module.exports = (io) => {
 				});
 
 				socket.on("leaveRoom", async () => {
+					const user = await userLeave(socket.uid);
+					const left = await roomLeave(
+						socket.redisClient,
+						socket.uid,
+						socket.room
+					);
 					socket.emit(
 						"message",
-						systemMessage(`you Leave the chat room.`)
+						systemMessage(`you leave the chat room.`)
 					);
-					socket.disconnect();
+
+					if (left !== null) {
+						io.to(user.room).emit(
+							"message",
+							systemMessage(`user ${user.id} left the chat`)
+						);
+						io.to(user.room).emit("roomUsers", {
+							room: user.room,
+							users: await getRoomUsers(user.room),
+						});
+					}
+					socket.leave(user.room);
+				});
+
+				/* 추가 */
+				socket.on("offRoom", async () => {
+					socket.emit(
+						"message",
+						systemMessage(`you off the chat room.`)
+					);
+					const user = await userLeave(socket.uid);
+					await socket.leave(user.room);
 				});
 
 				socket.on("disconnect", async () => {
-					const user = await userLeave(socket.redisClient, socket.id);
-					console.log(user);
-					const room = user.room;
-					io.to(room).emit(
-						"message",
-						systemMessage(`user ${user.id} left the chat`)
+					const user = await userLeave(socket.uid);
+					const left = await roomLeave(
+						socket.redisClient,
+						socket.uid,
+						socket.room
 					);
-					io.to(room).emit("roomUsers", {
-						room: user.room,
-						users: await getRoomUsers(user.room),
-					});
+					if (left !== null) {
+						const room = socket.room;
+						io.to(room).emit(
+							"message",
+							systemMessage(`${socket.uid} left the chat`)
+						);
+						io.to(room).emit("roomUsers", {
+							room: socket.room,
+							users: await getRoomUsers(socket.room),
+						});
+					}
 				});
 			}
 		});
