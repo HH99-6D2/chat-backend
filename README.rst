@@ -102,6 +102,19 @@ Events
             setTimeout(() => {socket.emit("leaveRoom")}, left);
          });
 
+   - ``expired``\: 서버에서 방의 종료시간이 만료되어 leaveRoom이벤트를 발생시켰습니다.
+
+      .. code-block:: javascript
+
+         socket.on("expired", (left) => {
+            window.location = 'lobby'; // 로비로 돌아간다
+         });
+
+      - expire시간이 되면 방에서 나가지게 되며 모든 기록이 삭제됩니다.
+
+         1. 서버가 expired를 감지함
+         #. client에 expired이벤트를 전달하고
+         #. 해당 room에 연결된 모든 소켓을 leaveRoom시킵니다. (따라서 disconnect가 아니라 나가진 상태입니다.)
 
 - **FROM CLIENT**
 

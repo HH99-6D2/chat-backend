@@ -46,6 +46,10 @@ if (room !== undefined) {
 	socket.on("timeout", (time) => {
 		console.log("left: ", time);
 	});
+	socket.on("expired", () => {
+		window.alert("Leaved The Room!");
+	});
+
 	socket.on("history", (logs) => {
 		console.log("history", logs);
 	});

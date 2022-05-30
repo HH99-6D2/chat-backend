@@ -25,22 +25,21 @@ async function roomJoin(socket, room, io) {
 		rooms[`${room}`] = [[startDate, endDate]];
 		await socket.redisClient.set(room, "[]");
 		// Exit event
-		setTimeout(
-			async () => {
-				const activeUsers = users.filter((user) => user.room === room);
-				io.to(room).emit("message", {
-					type: "system",
-					text: "expired",
-				});
+		setTimeout(async () => {
+			const activeUsers = users.filter((user) => user.room === room);
+			io.to(room).emit("message", {
+				type: "system",
+				text: "expired",
+			});
 
-				activeUsers.map(async (user) => {
-					await userLeave(user.id);
-				});
-				io.in(room).socketsLeave(room);
-				delete rooms[`${room}`];
-				await deleteRoom(socket.redisClient, room);
-			}, endDate - now);
-		);
+			activeUsers.map(async (user) => {
+				await userLeave(user.id);
+			});
+			io.to(room).emit("expired");
+			io.in(room).socketsLeave(room);
+			delete rooms[`${room}`];
+			await deleteRoom(socket.redisClient, room);
+		}, endDate - now);
 	}
 
 	if ((await getCurrentRoomUser(socket.uid, room)) === undefined) {
