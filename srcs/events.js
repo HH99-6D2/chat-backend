@@ -61,14 +61,10 @@ module.exports = (io) => {
 			if (user === null) {
 				return socket.emit(
 					"chat_error",
-					errorMessage(
-						"E10",
-						"Internal Server Error, another socket is connected"
-					)
+					errorMessage("E15", "Already joined by another socket")
 				);
 			} else {
 				const timeout = await roomJoin(socket, room, io);
-
 				socket.room = room;
 				socket.join(`${user.room}`); // 소켓연결코드
 				socket.emit("history", await getLogs(socket.redisClient, room));
@@ -82,7 +78,7 @@ module.exports = (io) => {
 
 				io.to(room).emit(
 					"message",
-					systemMessage(`user ${user.id} joined`)
+					systemMessage(`user ${socket.uid} joined`)
 				);
 
 				socket.on("chatMessage", async (message) => {
@@ -121,7 +117,10 @@ module.exports = (io) => {
 							data
 						);
 						if (saved) {
-							io.to(room).emit("message", data);
+							io.to(room).emit("message", {
+								...data,
+								cType: socket.cType,
+							});
 						} else {
 							closeRoom(room);
 						}
@@ -148,7 +147,7 @@ module.exports = (io) => {
 					if (left !== null) {
 						io.to(socket.room).emit(
 							"message",
-							systemMessage(`user ${user.id} left the chat`)
+							systemMessage(`user ${socket.uid} left the chat`)
 						);
 						io.to(socket.room).emit("roomUsers", {
 							room: socket.room,

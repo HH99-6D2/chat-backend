@@ -5,11 +5,16 @@ const rooms = {}; // {1: [1,2,3,4], 2: [2,4] } // 기록상 유저들
 // JOIN USER TO Chat;
 async function userJoin(id, nickname, cType, room) {
 	const user = { id, nickname, cType, room };
+
+	console.log("id:", id);
+	console.log(users);
 	const findUser = await getCurrentUser(id);
-	if (findUser !== undefined) return null;
-	users.push(user);
-	console.log("activeUsers", users);
-	return user;
+	if (findUser === undefined) {
+		console.log("activeUsers", users);
+		users.push(user);
+		return user;
+	}
+	return null;
 }
 
 async function roomJoin(socket, room, io) {
@@ -35,7 +40,9 @@ async function roomJoin(socket, room, io) {
 			activeUsers.map(async (user) => {
 				await userLeave(user.id);
 			});
+
 			io.to(room).emit("expired");
+
 			io.in(room).socketsLeave(room);
 			delete rooms[`${room}`];
 			await deleteRoom(socket.redisClient, room);
@@ -43,6 +50,7 @@ async function roomJoin(socket, room, io) {
 	}
 
 	if ((await getCurrentRoomUser(socket.uid, room)) === undefined) {
+		console.log(rooms);
 		rooms[`${room}`].push(user);
 		console.log("JOINED To ROOM", rooms[`${room}`]);
 	} else {

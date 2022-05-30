@@ -45,7 +45,7 @@ Events
       - message: E02 (invalid token) / content: login required
       - message: E03 (wrong)  / content: wrong TOKEN (login again)
       - message: E04 (nickname required)  / content: nickname required
-      - message: E05 (cType required)  / content: cType required
+      - (**DEPRECATED**\) *message: E05 (cType required)  / content: cType required*
       - message: E06 (redis conn error)  / content: Redis Connection Error
 
    - ``chat_error``\: Chat중의 Room에 대한 에러 혹은 메세지에 대한 에러 등이 포함됩니다.
@@ -56,6 +56,14 @@ Events
                console.log(err.type); // E1* ~ E1*
                console.log(err.text); // Room invalid || Chat type Error
          })
+
+      - errorMessage("E11", "Invalid Room number") // 입력이 숫자형이 아닐때
+      - errorMessage("E12", "Invalid Room number (Not Exist)") // 타입은 맞으나 존재하지 않을 때
+      - errorMessage("E13", "Room not opened") // 유효시간 이전일 때
+      - errorMessage("E14", "Room Expired") // 유효시간이 지났을 때
+      - errorMessage("E15", "Already joined") // 방 참여 거부
+      - errorMessage("E16", "Invalid message Type") // text, image 타입이 아닐때
+      - errorMessage("E17", "User not belong to any room") // 방을 이미 나갔고 유효하게 join한 방이 없을 경우
 
       - *메세지가 유효하지 않으면 전달을 막거나, 방에 중복접근시 join을 막는 등의 행동*
 
@@ -172,6 +180,7 @@ MESSAGES
           text: string, // message
           nickname: string, // user nickname
           time: moment().format("h:mm a") // "4:41 pm"
+          cType: string(numeric) // '0' ~ '9' || DEFAULT: null
       }
 
 :Image:
@@ -185,6 +194,7 @@ MESSAGES
           nickname: string,
           imageUrl: string,
           time: moment().format("h:mm a")
+          cType: string(numeric) // '0' ~ '9' || DEFAULT: null
       }
 
 :History:
@@ -195,21 +205,4 @@ MESSAGES
          <Image Message>, <Text Message> ...
       ]
 
-:ErrorMessage: 연결시(connect)에 발생하는 문제가 아니라 진행중에 발생하는 문제이기 때문에, 비정상적인 입력을 전제합니다.
-
-   .. code-block:: json
-
-      {
-          type: string, // "E1*"
-          text: string  // "some Error 설명" 
-      }
-
-   - errorMessage("E10", "Internal Server Error, Not able to join room")
-   - errorMessage("E11", "Invalid Room number")
-   - errorMessage("E12", "Invalid Room number (Not Exist)")
-   - errorMessage("E13", "Room not opened")
-   - errorMessage("E14", "Room Expired")
-   - errorMessage("E15", "Already joined") // 방 참여 거부
-   - errorMessage("E16", "Invalid message Type")
-   - errorMessage("E17", "User not belong to any room") // 방 join 다시 필요
 

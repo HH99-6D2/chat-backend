@@ -47,14 +47,10 @@ io.use((socket, next) => {
 io.use((socket, next) => {
 	const nickname = socket.handshake.auth.nickname;
 	const cType = socket.handshake.auth.cType;
-	socket.cType = cType;
+	socket.cType = isNaN(cType) ? null : cType;
 	if (!nickname) {
 		const err = new Error("E04");
 		err.data = { content: "nickname required" };
-		next(err);
-	} else if (!cType) {
-		const err = new Error("E05");
-		err.data = { content: "cType required" };
 		next(err);
 	} else {
 		socket.nickname = nickname;
