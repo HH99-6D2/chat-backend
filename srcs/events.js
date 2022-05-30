@@ -93,18 +93,22 @@ module.exports = (io) => {
 							errorMessage("E17", "User not belong to any room")
 						);
 
-					const room = user.room;
+					const room = socket.room;
 					message = JSON.parse(message);
 					console.log(message);
 					let data =
 						message.type === "text"
-							? textMessage(user.id, user.nickname, message.text)
+							? textMessage(
+									socket.uid,
+									socket.nickname,
+									message.text
+							  )
 							: null;
 					data =
 						message.type === "image"
 							? imageMessage(
-									user.id,
-									user.nickname,
+									socket.uid,
+									socket.nickname,
 									message.text,
 									message.imageUrl
 							  )
@@ -142,16 +146,16 @@ module.exports = (io) => {
 					);
 
 					if (left !== null) {
-						io.to(user.room).emit(
+						io.to(socket.room).emit(
 							"message",
 							systemMessage(`user ${user.id} left the chat`)
 						);
-						io.to(user.room).emit("roomUsers", {
-							room: user.room,
-							users: await getRoomUsers(user.room),
+						io.to(socket.room).emit("roomUsers", {
+							room: socket.room,
+							users: await getRoomUsers(socket.room),
 						});
 					}
-					socket.leave(user.room);
+					socket.leave(socket.room);
 				});
 
 				/* 추가 */
